@@ -1,0 +1,11 @@
+DB_HOST=db_alumnos
+DB_NAME=alumnos
+DB_USER=root
+
+# Can't access a db when using volumes :(, so we pass root, such is life
+MYSQL_ROOT_PASSWORD=VerySafePassword1
+DB_PASSWORD=${MYSQL_ROOT_PASSWORD}
+
+MYSQL_DATABASE=${DB_NAME}
+
+

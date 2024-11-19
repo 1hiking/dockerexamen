@@ -1,0 +1,62 @@
+# Usamos un health check debido a que tardan un poco las bases de dato en iniciar, existen varias maneras de checar
+# con credenciales pero decidi usar una simple donde la db se hace un ping a si misma. :)
+
+services:
+  maestros:
+    build:
+      context: .
+      dockerfile: dockerfile_maestros
+    ports:
+      - 8080:80
+    env_file:
+      - .envm
+    depends_on:
+      db_maestros:
+        condition: service_healthy
+
+  db_maestros:
+    image: mysql:latest
+    env_file:
+      - .envm
+    volumes:
+      # Because we are passing a file and not a dir we do this.
+      - ./db/maestros.sql:/docker-entrypoint-initdb.d/maestros.sql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+
+  alumnos:
+    build:
+      context: .
+      dockerfile: dockerfile_alumnos
+    ports:
+      - 8090:80
+    env_file:
+      - .enva
+    depends_on:
+      db_alumnos:
+        condition: service_healthy
+
+  db_alumnos:
+    image: mysql:latest
+    env_file:
+      - .enva
+    volumes:
+      - ./db/alumnos.sql:/docker-entrypoint-initdb.d/alumnos.sql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # :) we pass whatever is DB_HOST as the server, and we put root credentials
+  # otherwise we put it on PMA
+  management:
+    image: phpmyadmin
+    ports:
+      - 8092:80
+    environment:
+      - PMA_ARBITRARY=1
